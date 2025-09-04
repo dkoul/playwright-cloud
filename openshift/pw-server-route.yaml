@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: pw-server
+  labels:
+    app: pw-server
+spec:
+  to:
+    kind: Service
+    name: pw-server
+  port:
+    targetPort: http
+  tls:
+    termination: edge 

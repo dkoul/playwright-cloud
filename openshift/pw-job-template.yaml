@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pw-job-example
+  labels:
+    app: pw-server
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: pw-server
+    spec:
+      restartPolicy: Never
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: runner
+          image: mcr.microsoft.com/playwright:v1.54.0-noble
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              set -euo pipefail
+              git clone "$TEST_REPO" /work
+              cd /work/${TEST_DIR:-}
+              npm ci ${NPM_CI_FLAGS:-}
+              npx -y playwright@1.54.0 install --with-deps
+              export PW_TEST_CONNECT_WS_ENDPOINT="$PW_WS_ENDPOINT"
+              npx playwright test --reporter=line
+          env:
+            - name: TEST_REPO
+              value: "https://github.com/your-org/your-playwright-tests.git"
+            - name: TEST_DIR
+              value: "" # set to subdirectory if needed
+            - name: NPM_CI_FLAGS
+              value: ""
+            - name: PW_WS_ENDPOINT
+              value: "ws://pw-server-<namespace>.<apps-domain>/" # replace with Route host
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "1Gi" 

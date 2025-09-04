@@ -1,0 +1,11 @@
+{
+  "name": "playwright-cloud-tests",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "1.54.0"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "PWTEST_HEADED=1 playwright test"
+  }
+} 
