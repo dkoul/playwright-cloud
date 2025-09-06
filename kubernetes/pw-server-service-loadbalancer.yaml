@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pw-server-lb
+  labels:
+    app: pw-server
+spec:
+  selector:
+    app: pw-server
+  type: LoadBalancer  # Or NodePort for simpler setups
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      # nodePort: 30300  # Uncomment for NodePort

@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pw-server
+  labels:
+    app: pw-server
+  annotations:
+    # Enable WebSocket support
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/websocket-services: "pw-server"
+    # Enable TLS/SSL
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Adjust for your cert issuer
+spec:
+  ingressClassName: nginx  # or your ingress class
+  tls:
+    - hosts:
+        - pw-server.your-domain.com  # Replace with your domain
+      secretName: pw-server-tls
+  rules:
+    - host: pw-server.your-domain.com  # Replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pw-server
+                port:
+                  number: 3000

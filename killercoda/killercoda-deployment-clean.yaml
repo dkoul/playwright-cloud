@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: playwright-cloud
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pw-server
+  namespace: playwright-cloud
+  labels:
+    app: pw-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pw-server
+  template:
+    metadata:
+      labels:
+        app: pw-server
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: server
+          image: mcr.microsoft.com/playwright:v1.54.0-noble
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh","-c"]
+          args:
+            - "npx -y playwright@1.54.0 run-server --port 3000 --host 0.0.0.0"
+          env:
+            - name: HOME
+              value: "/tmp"
+            - name: NPM_CONFIG_CACHE
+              value: "/tmp/.npm"
+            - name: npm_config_cache
+              value: "/tmp/.npm"
+            - name: XDG_CACHE_HOME
+              value: "/tmp/.cache"
+            - name: PLAYWRIGHT_BROWSERS_PATH
+              value: "/ms-playwright"
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pw-server
+  namespace: playwright-cloud
+  labels:
+    app: pw-server
+spec:
+  selector:
+    app: pw-server
+  type: NodePort
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      nodePort: 30300
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pw-server
+  namespace: playwright-cloud
+  labels:
+    app: pw-server
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pw-server
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

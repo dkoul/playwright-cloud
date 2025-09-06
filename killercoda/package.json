@@ -1,0 +1,16 @@
+{
+  "name": "playwright-cloud-killercoda-test",
+  "version": "1.0.0",
+  "description": "Test script for Playwright Cloud on Killercoda Kubernetes playground",
+  "main": "test-in-killercoda.js",
+  "scripts": {
+    "test": "node test-in-killercoda.js",
+    "test-with-port-forward": "kubectl port-forward -n playwright-cloud service/pw-server 3000:3000 & sleep 3 && PW_TEST_CONNECT_WS_ENDPOINT=ws://localhost:3000/ node test-in-killercoda.js; kill %1"
+  },
+  "dependencies": {
+    "playwright": "1.54.0"
+  },
+  "keywords": ["playwright", "kubernetes", "killercoda", "testing", "browser-automation"],
+  "author": "Playwright Cloud Demo",
+  "license": "MIT"
+}

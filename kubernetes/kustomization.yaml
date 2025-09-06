@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonLabels:
+  app: pw-server
+resources:
+  - ../openshift/pw-server-deployment.yaml
+  - ../openshift/pw-server-service.yaml
+  - ../openshift/pw-server-hpa.yaml
+  - pw-server-ingress.yaml
