@@ -4,6 +4,11 @@ This guide shows how to run a private, scalable Playwright server on OpenShift a
 
 Reference: Playwright Remote Server and Docker guidance - https://playwright.dev/docs/docker
 
+## Architecture diagram
+
+![architecture diagram](arch.png)
+
+
 ## Prerequisites
 - Access to an OpenShift project/namespace where you can create Deployments, Services, Routes, and HPAs
 - OpenShift CLI (`oc`) installed
